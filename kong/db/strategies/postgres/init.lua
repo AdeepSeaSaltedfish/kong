@@ -1,4 +1,3 @@
-local constants     = require "kong.constants"
 local arrays        = require "pgmoon.arrays"
 local json          = require "pgmoon.json"
 local cjson         = require "cjson"
@@ -577,7 +576,15 @@ end
 
 
 local function page(self, size, token, foreign_key, foreign_entity_name, options)
-  size = size or constants.DEFAULT_PAGE_SIZE
+  if not size then
+    if type(options) == "table" and type(options.pagination) == "table" then
+      size = options.pagination.page_size
+    end
+
+    if not size then
+      size = self.connector.defaults.pagination.page_size
+    end
+  end
 
   local limit = size + 1
 

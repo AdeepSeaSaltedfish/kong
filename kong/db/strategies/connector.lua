@@ -1,7 +1,14 @@
 local fmt = string.format
 
 
-local Connector = {}
+local Connector = {
+  defaults = {
+    pagination = {
+      page_size     = 1000,
+      max_page_size = 50000,
+    },
+  },
+}
 
 
 function Connector:init()

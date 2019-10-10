@@ -1,5 +1,4 @@
 local iteration = require "kong.db.iteration"
-local constants = require "kong.constants"
 local cassandra = require "cassandra"
 local cjson = require "cjson"
 
@@ -1203,7 +1202,15 @@ do
   end
 
   function _mt:page(size, offset, options, foreign_key, foreign_key_db_columns)
-    size = size or constants.DEFAULT_PAGE_SIZE
+    if not size then
+      if type(options) == "table" and type(options.pagination) == "table" then
+        size = options.pagination.page_size
+      end
+
+      if not size then
+        size = self.connector.defaults.pagination.page_size
+      end
+    end
 
     if offset then
       local offset_decoded = decode_base64(offset)
