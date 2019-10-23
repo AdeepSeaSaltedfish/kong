@@ -13,8 +13,50 @@ pipeline {
         BINTRAY_USR = "${env.BINTRAY_CREDENTIALS_USR}"
         BINTRAY_KEY = "${env.BINTRAY_CREDENTIALS_PSW}"
         KONG_BUILD_TOOLS = "origin/feat/kong-jenkins"
-    }
+    }    
     stages {
+        stage('Integration Tests') {
+            parallel {
+                stage('postgres') {
+                    agent {
+                        node {
+                            label 'docker-compose'
+                        }
+                    }
+                    environment {
+                        KONG_SOURCE_LOCATION = "${env.WORKSPACE}"
+                        KONG_BUILD_TOOLS_LOCATION = "${env.WORKSPACE}/../kong-build-tools"
+                        TEST_DATABASE = 'postgres'
+                    }
+                    steps {
+                        sh 'make setup-kong-build-tools'
+                        dir('../kong-build-tools'){
+                            sh 'make test-kong'
+                            sh 'TEST_SUITE="plugins" make test-kong'
+                        }
+                    }
+                }
+                stage('cassandra') {
+                    agent {
+                        node {
+                            label 'docker-compose'
+                        }
+                    }
+                    environment {
+                        KONG_SOURCE_LOCATION = "${env.WORKSPACE}"
+                        KONG_BUILD_TOOLS_LOCATION = "${env.WORKSPACE}/../kong-build-tools"
+                        TEST_DATABASE = 'cassandra'
+                    }
+                    steps {
+                        sh 'make setup-kong-build-tools'
+                        dir('../kong-build-tools'){
+                            sh 'make test-kong'
+                            sh 'TEST_SUITE="plugins" make test-kong'
+                        }
+                    }
+                }
+            }
+        }
         stage('Nightly Releases') {
             parallel {
                 stage('Ubuntu Releases') {
@@ -34,7 +76,6 @@ pipeline {
                         DOCKER_MACHINE_ARM64_NAME = "jenkins-kong-${env.BUILD_NUMBER}"
                     }
                     steps {
-                        sh 'printenv'
                         sh 'make setup-kong-build-tools'
                         sh 'mkdir -p $HOME/bin'
                         sh 'sudo ln -s $HOME/bin/kubectl /usr/local/bin/kubectl'
@@ -65,7 +106,9 @@ pipeline {
                         sh 'sudo ln -s $HOME/bin/kind /usr/local/bin/kind'
                         dir('../kong-build-tools'){ sh 'make setup-ci' }
                         sh 'export RESTY_IMAGE_TAG=6 && make nightly-release'
-                        sh 'export RESTY_IMAGE_TAG=6 && make nightly-release'
+                        sh 'export RESTY_IMAGE_TAG=7 && make nightly-release'
+                        sh 'export RESTY_IMAGE_BASE=rhel RESTY_IMAGE_TAG=6 && make nightly-release'
+                        sh 'export RESTY_IMAGE_BASE=rhel RESTY_IMAGE_TAG=7 && make nightly-release'
                     }
                 }
                 stage('Debian Releases') {
@@ -89,6 +132,7 @@ pipeline {
                         dir('../kong-build-tools'){ sh 'make setup-ci' }
                         sh 'export RESTY_IMAGE_TAG=jessie && make nightly-release'
                         sh 'export RESTY_IMAGE_TAG=stretch && make nightly-release'
+                        sh 'export RESTY_IMAGE_TAG=buster && make nightly-release'
                     }
                 }
             }
