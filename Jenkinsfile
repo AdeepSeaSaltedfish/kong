@@ -149,6 +149,9 @@ pipeline {
                         RESTY_IMAGE_BASE = 'centos'
                         KONG_SOURCE_LOCATION = "${env.WORKSPACE}"
                         KONG_BUILD_TOOLS_LOCATION = "${env.WORKSPACE}/../kong-build-tools"
+                        REDHAT_CREDENTIALS = credentials('redhat')
+                        REDHAT_USERNAME = "${env.REDHAT_USR}"
+                        REDHAT_PASSWORD = "${env.REDHAT_PSW}"
                     }
                     steps {
                         sh 'make setup-kong-build-tools'
