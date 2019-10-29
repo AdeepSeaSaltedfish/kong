@@ -4,7 +4,6 @@ pipeline {
         KONG_PACKAGE_NAME = 'kong'
         REPOSITORY_NAME = 'kong-nightly'
         REPOSITORY_OS_NAME = "${env.BRANCH_NAME}"
-        KONG_VERSION = "2019-10-17"
         UPDATE_CACHE = "true"
         DOCKER_CREDENTIALS = credentials('dockerhub')
         DOCKER_USERNAME = "${env.DOCKER_CREDENTIALS_USR}"
@@ -15,8 +14,42 @@ pipeline {
         KONG_BUILD_TOOLS = "origin/feat/kong-jenkins"
     }    
     stages {
+        stage('Build Kong') {
+            agent {
+                node {
+                    label 'docker-compose'
+                }
+            }
+            environment {
+                KONG_SOURCE_LOCATION = "${env.WORKSPACE}"
+                KONG_BUILD_TOOLS_LOCATION = "${env.WORKSPACE}/../kong-build-tools"
+            }
+            steps {
+                sh 'make setup-kong-build-tools'
+                dir('../kong-build-tools') { sh 'make kong-test-container' }
+            }
+        }
         stage('Integration Tests') {
             parallel {
+                stage('dbless') {
+                    agent {
+                        node {
+                            label 'docker-compose'
+                        }
+                    }
+                    environment {
+                        KONG_SOURCE_LOCATION = "${env.WORKSPACE}"
+                        KONG_BUILD_TOOLS_LOCATION = "${env.WORKSPACE}/../kong-build-tools"
+                        TEST_DATABASE = "off"
+                        TEST_SUITE = "dbless"
+                    }
+                    steps {
+                        sh 'make setup-kong-build-tools'
+                        dir('../kong-build-tools'){
+                            sh 'make test-kong'
+                        }
+                    }
+                }
                 stage('postgres') {
                     agent {
                         node {
@@ -74,6 +107,10 @@ pipeline {
                         AWS_ACCESS_KEY = credentials('AWS_ACCESS_KEY')
                         AWS_SECRET_ACCESS_KEY = credentials('AWS_SECRET_ACCESS_KEY')
                         DOCKER_MACHINE_ARM64_NAME = "jenkins-kong-${env.BUILD_NUMBER}"
+                        KONG_VERSION = """${sh(
+                            returnStdout: true,
+                            script: 'date +%Y-%m-%d'
+                        )}"""
                     }
                     steps {
                         sh 'make setup-kong-build-tools'
@@ -98,6 +135,10 @@ pipeline {
                         RESTY_IMAGE_BASE = 'centos'
                         KONG_SOURCE_LOCATION = "${env.WORKSPACE}"
                         KONG_BUILD_TOOLS_LOCATION = "${env.WORKSPACE}/../kong-build-tools"
+                        KONG_VERSION = """${sh(
+                            returnStdout: true,
+                            script: 'date +%Y-%m-%d'
+                        )}"""
                     }
                     steps {
                         sh 'make setup-kong-build-tools'
@@ -123,6 +164,10 @@ pipeline {
                         RESTY_IMAGE_BASE = 'debian'
                         KONG_SOURCE_LOCATION = "${env.WORKSPACE}"
                         KONG_BUILD_TOOLS_LOCATION = "${env.WORKSPACE}/../kong-build-tools"
+                        KONG_VERSION = """${sh(
+                            returnStdout: true,
+                            script: 'date +%Y-%m-%d'
+                        )}"""
                     }
                     steps {
                         sh 'make setup-kong-build-tools'
