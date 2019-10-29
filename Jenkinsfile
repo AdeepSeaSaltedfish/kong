@@ -145,10 +145,6 @@ pipeline {
                         AWS_ACCESS_KEY = credentials('AWS_ACCESS_KEY')
                         AWS_SECRET_ACCESS_KEY = credentials('AWS_SECRET_ACCESS_KEY')
                         DOCKER_MACHINE_ARM64_NAME = "jenkins-kong-${env.BUILD_NUMBER}"
-                        KONG_VERSION = """${sh(
-                            returnStdout: true,
-                            script: 'date +%Y-%m-%d'
-                        )}"""
                     }
                     steps {
                         sh 'make setup-kong-build-tools'
@@ -156,9 +152,9 @@ pipeline {
                         sh 'sudo ln -s $HOME/bin/kubectl /usr/local/bin/kubectl'
                         sh 'sudo ln -s $HOME/bin/kind /usr/local/bin/kind'
                         dir('../kong-build-tools'){ sh 'make setup-ci' }
-                        sh 'export RESTY_IMAGE_TAG=trusty && make nightly-release'
-                        sh 'export RESTY_IMAGE_TAG=xenial && make nightly-release'
-                        sh 'export RESTY_IMAGE_TAG=bionic && make nightly-release'
+                        sh 'export KONG_VERSION=`date +%Y-%m-%d` RESTY_IMAGE_TAG=trusty && make nightly-release'
+                        sh 'export KONG_VERSION=`date +%Y-%m-%d` RESTY_IMAGE_TAG=xenial && make nightly-release'
+                        sh 'export KONG_VERSION=`date +%Y-%m-%d` RESTY_IMAGE_TAG=bionic && make nightly-release'
                     }
                 }
                 stage('Centos Releases') {
@@ -173,10 +169,6 @@ pipeline {
                         RESTY_IMAGE_BASE = 'centos'
                         KONG_SOURCE_LOCATION = "${env.WORKSPACE}"
                         KONG_BUILD_TOOLS_LOCATION = "${env.WORKSPACE}/../kong-build-tools"
-                        KONG_VERSION = """${sh(
-                            returnStdout: true,
-                            script: 'date +%Y-%m-%d'
-                        )}"""
                     }
                     steps {
                         sh 'make setup-kong-build-tools'
@@ -184,10 +176,10 @@ pipeline {
                         sh 'sudo ln -s $HOME/bin/kubectl /usr/local/bin/kubectl'
                         sh 'sudo ln -s $HOME/bin/kind /usr/local/bin/kind'
                         dir('../kong-build-tools'){ sh 'make setup-ci' }
-                        sh 'export RESTY_IMAGE_TAG=6 && make nightly-release'
-                        sh 'export RESTY_IMAGE_TAG=7 && make nightly-release'
-                        sh 'export RESTY_IMAGE_BASE=rhel RESTY_IMAGE_TAG=6 && make nightly-release'
-                        sh 'export RESTY_IMAGE_BASE=rhel RESTY_IMAGE_TAG=7 && make nightly-release'
+                        sh 'export KONG_VERSION=`date +%Y-%m-%d` RESTY_IMAGE_TAG=6 && make nightly-release'
+                        sh 'export KONG_VERSION=`date +%Y-%m-%d` RESTY_IMAGE_TAG=7 && make nightly-release'
+                        sh 'export KONG_VERSION=`date +%Y-%m-%d` RESTY_IMAGE_BASE=rhel RESTY_IMAGE_TAG=6 && make nightly-release'
+                        sh 'export KONG_VERSION=`date +%Y-%m-%d` RESTY_IMAGE_BASE=rhel RESTY_IMAGE_TAG=7 && make nightly-release'
                     }
                 }
                 stage('Debian Releases') {
@@ -202,10 +194,6 @@ pipeline {
                         RESTY_IMAGE_BASE = 'debian'
                         KONG_SOURCE_LOCATION = "${env.WORKSPACE}"
                         KONG_BUILD_TOOLS_LOCATION = "${env.WORKSPACE}/../kong-build-tools"
-                        KONG_VERSION = """${sh(
-                            returnStdout: true,
-                            script: 'date +%Y-%m-%d'
-                        )}"""
                     }
                     steps {
                         sh 'make setup-kong-build-tools'
@@ -213,9 +201,9 @@ pipeline {
                         sh 'sudo ln -s $HOME/bin/kubectl /usr/local/bin/kubectl'
                         sh 'sudo ln -s $HOME/bin/kind /usr/local/bin/kind'
                         dir('../kong-build-tools'){ sh 'make setup-ci' }
-                        sh 'export RESTY_IMAGE_TAG=jessie && make nightly-release'
-                        sh 'export RESTY_IMAGE_TAG=stretch && make nightly-release'
-                        sh 'export RESTY_IMAGE_TAG=buster && make nightly-release'
+                        sh 'export KONG_VERSION=`date +%Y-%m-%d` RESTY_IMAGE_TAG=jessie && make nightly-release'
+                        sh 'export KONG_VERSION=`date +%Y-%m-%d` RESTY_IMAGE_TAG=stretch && make nightly-release'
+                        sh 'export KONG_VERSION=`date +%Y-%m-%d` RESTY_IMAGE_TAG=buster && make nightly-release'
                     }
                 }
             }
