@@ -26,6 +26,7 @@ pipeline {
             }
             steps {
                 sh 'make setup-kong-build-tools'
+                sh 'echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin || true'
                 dir('../kong-build-tools') { sh 'make kong-test-container' }
             }
         }
@@ -65,7 +66,25 @@ pipeline {
                         sh 'make setup-kong-build-tools'
                         dir('../kong-build-tools'){
                             sh 'make test-kong'
-                            sh 'TEST_SUITE="plugins" make test-kong'
+                        }
+                    }
+                }
+                stage('postgres plugins') {
+                    agent {
+                        node {
+                            label 'docker-compose'
+                        }
+                    }
+                    environment {
+                        KONG_SOURCE_LOCATION = "${env.WORKSPACE}"
+                        KONG_BUILD_TOOLS_LOCATION = "${env.WORKSPACE}/../kong-build-tools"
+                        TEST_DATABASE = 'postgres'
+                        TEST_SUITE = 'plugins'
+                    }
+                    steps {
+                        sh 'make setup-kong-build-tools'
+                        dir('../kong-build-tools'){
+                            sh 'make test-kong'
                         }
                     }
                 }
@@ -85,6 +104,25 @@ pipeline {
                         dir('../kong-build-tools'){
                             sh 'make test-kong'
                             sh 'TEST_SUITE="plugins" make test-kong'
+                        }
+                    }
+                }
+                stage('cassandra plugins') {
+                    agent {
+                        node {
+                            label 'docker-compose'
+                        }
+                    }
+                    environment {
+                        KONG_SOURCE_LOCATION = "${env.WORKSPACE}"
+                        KONG_BUILD_TOOLS_LOCATION = "${env.WORKSPACE}/../kong-build-tools"
+                        TEST_DATABASE = 'cassandra'
+                        TEST_SUITE = 'plugins'
+                    }
+                    steps {
+                        sh 'make setup-kong-build-tools'
+                        dir('../kong-build-tools'){
+                            sh 'make test-kong'
                         }
                     }
                 }
