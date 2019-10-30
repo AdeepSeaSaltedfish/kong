@@ -122,9 +122,6 @@ pipeline {
                         RESTY_IMAGE_TAG = 'xenial'
                         KONG_SOURCE_LOCATION = "${env.WORKSPACE}"
                         KONG_BUILD_TOOLS_LOCATION = "${env.WORKSPACE}/../kong-build-tools"
-                        AWS_ACCESS_KEY = credentials('AWS_ACCESS_KEY')
-                        AWS_SECRET_ACCESS_KEY = credentials('AWS_SECRET_ACCESS_KEY')
-                        DOCKER_MACHINE_ARM64_NAME = "jenkins-kong-${env.BUILD_NUMBER}"
                     }
                     steps {
                         sh 'make setup-kong-build-tools'
@@ -144,7 +141,6 @@ pipeline {
                         }
                     }
                     environment {
-                        BUILDX = "false"
                         PACKAGE_TYPE = 'rpm'
                         RESTY_IMAGE_BASE = 'centos'
                         KONG_SOURCE_LOCATION = "${env.WORKSPACE}"
@@ -161,8 +157,6 @@ pipeline {
                         dir('../kong-build-tools'){ sh 'make setup-ci' }
                         sh 'export KONG_VERSION=`date +%Y-%m-%d` RESTY_IMAGE_TAG=6 && make nightly-release'
                         sh 'export KONG_VERSION=`date +%Y-%m-%d` RESTY_IMAGE_TAG=7 && make nightly-release'
-                        sh 'export KONG_VERSION=`date +%Y-%m-%d` RESTY_IMAGE_BASE=rhel RESTY_IMAGE_TAG=6 && make nightly-release'
-                        sh 'export KONG_VERSION=`date +%Y-%m-%d` RESTY_IMAGE_BASE=rhel RESTY_IMAGE_TAG=7 && make nightly-release'
                     }
                 }
                 stage('Debian Releases') {
@@ -172,7 +166,6 @@ pipeline {
                         }
                     }
                     environment {
-                        BUILDX = "false"
                         PACKAGE_TYPE = 'deb'
                         RESTY_IMAGE_BASE = 'debian'
                         KONG_SOURCE_LOCATION = "${env.WORKSPACE}"
